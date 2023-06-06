@@ -1,8 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
-import { ref } from 'vue'
-import Preds from './Preds.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+
 </script>
 
 <template>
@@ -30,6 +27,7 @@ import { createRouter, createWebHistory } from 'vue-router'
   background-color: #0a4267;
   color: white;
   padding: 0;
+  margin-bottom: 10px;
 }
 
 .navlink {

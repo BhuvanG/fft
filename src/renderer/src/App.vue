@@ -18,28 +18,24 @@ import Preds from './components/Preds.vue'
 //     console.log(error)
 //   })  
 
-import Fixtures from './assets/matches.json'
-let dataFixture = ref([]);
-
-Fixtures.matches.forEach((match) => {
-  if (match.competition.name === 'Premier League') {
-    dataFixture.value.push({
-      homeTeam: match.homeTeam.name,
-      awayTeam: match.awayTeam.name
-    })
-  }
-})
 </script>
 
 <template>
-  <Navbar />
+  <div class="container">
+    <Navbar />
+  </div>
 </template>
 
 <style lang="less">
 body {
+
   margin: 0;
   padding: 0;
   font-family: 'Roboto', sans-serif;
-  
+  background-color: #181A1B;
+}
+
+.container {
+  display: block;
 }
 </style>

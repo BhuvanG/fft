@@ -64,48 +64,91 @@ function getPrediction(e) {
 </script>
 
 <template>
-    <div class="container" v-for="fixture in dataFixture" :id=fixture.id>
-        <div class="circle">
-            <div class="checkmark"></div>
+    <div class="grid-container">
+        <div class="heading">
+            <p>CHECK</p>
+            <p>HOME TEAM</p>
+            <p>AWAY TEAM</p>
+            <p>DATE</p>
+            <p style="background-color: #e02d2d;">AZEEM</p>
+            <p style="background-color: #302de0;">NEVILLE</p>
+            <p style="background-color: #ffffff;">KAUTUK</p>
         </div>
-        <div class="team" id="homeTeam">
-            <img :src="fixture.homeCrest" alt="homeCrest">
-            <p>{{ fixture.homeTeam }}</p>
-        </div>
-        <div class="team" id="awayTeam">
-            <img :src="fixture.awayCrest" alt="awayCrest">
-            <p>{{ fixture.awayTeam }}</p>
-        </div>
-        <div class="match-date">
-            <p>{{ moment(fixture.date).utc().format('DD-MM-YYYY') }}</p>
-            <p>{{ moment(fixture.date).format('dddd') }}</p>
-        </div>
-        <div class="n" name="Azeem" prediction="">
-            <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-            <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-        </div>
-        <div class="n" name="Neville" prediction="">
-            <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-            <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-        </div>
-        <div class="n" name="Kautuk" prediction="">
-            <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-            <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+        <div class="pred-container" v-for="fixture in dataFixture" :id=fixture.id>
+            <div class="circle">
+                <div class="checkmark"></div>
+            </div>
+            <div class="team" id="homeTeam">
+                <img :src="fixture.homeCrest" alt="homeCrest">
+                <p>{{ fixture.homeTeam }}</p>
+            </div>
+            <div class="team" id="awayTeam">
+                <img :src="fixture.awayCrest" alt="awayCrest">
+                <p>{{ fixture.awayTeam }}</p>
+            </div>
+            <div class="match-date">
+                <p>{{ moment(fixture.date).utc().format('DD-MM-YYYY') }}</p>
+                <p>{{ moment(fixture.date).format('dddd') }}</p>
+            </div>
+            <div class="n" id="Azeem" prediction="">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+            </div>
+            <div class="n" id="Neville" prediction="">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+            </div>
+            <div class="n" id="Kautuk" prediction="">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+            </div>
         </div>
     </div>
 </template>
 
 <style>
-.container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+.grid-container {
+    display: grid;
     width: 100%;
-    height: 4%;
+    margin: 0 auto;
+}
 
-    outline: 1px solid #30ea39;
-    border-radius: 10px;
-    margin: 10px 0;
+.heading {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 2fr 2fr 2fr 2fr;
+    width: 90%;
+    height: 30px;
+    margin: auto;
+    border: 1px solid #4a7478;
+    border-radius: 5px 5px 0 0;
+    background-color: rgb(108, 169, 169);
+    font-weight: 600;
+}
+
+
+
+.heading>p {
+    padding-top: 5px;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+
+#az {
+    background-color: #e02d2d;
+    width: 100%;
+
+}
+
+.pred-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 2fr 2fr 2fr 2fr;
+    width: 90%;
+    height: 80px;
+    outline: 1px solid #4a7478;
+    background-color: #141617;
+    margin: auto;
+    color: #D3CFC9;
 }
 
 .team {
@@ -113,9 +156,7 @@ function getPrediction(e) {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 10%;
-    height: 40%;
-
+    margin: auto;
     text-align: center;
 }
 
@@ -124,6 +165,7 @@ function getPrediction(e) {
     flex-direction: column;
     justify-content: center;
     text-align: center;
+    margin: auto;
 }
 
 img {
@@ -141,6 +183,8 @@ p {
     border-radius: 50%;
     width: 20px;
     height: 20px;
+
+    margin: auto;
 }
 
 .checkmark {
@@ -156,15 +200,39 @@ p {
 
 .n {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    gap: 10px;
+
 }
 
 .n>img {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     background-color: #5c808e;
     border: 2px solid black;
     border-radius: 2px;
     padding: 5px;
+}
+
+#Azeem {
+    background-color: #e02d2d;
+    width: 100%;
+    height: 100%;
+
+}
+
+#Neville {
+    background-color: #302de0;
+    width: 100%;
+    height: 100%;
+}
+
+#Kautuk {
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
 }
 </style>
 ```
