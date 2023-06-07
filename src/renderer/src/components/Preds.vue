@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import Fixtures from '../assets/matches.json'
 import moment from 'moment'
-let dataFixture = ref([]);
+import { predStore } from './stores/predStore.js'
 
-//Getting all the fixtures from the json file
+let useStore = predStore()
+
+let dataFixture = ref([]);
 Fixtures.matches.forEach((match) => {
     if (match.competition.name === 'Premier League') {
         dataFixture.value.push({
@@ -16,13 +18,38 @@ Fixtures.matches.forEach((match) => {
             date: match.utcDate
         })
     }
+    useStore.setNew(match.id)
 })
+console.log(useStore.pred)
+console.log(dataFixture.value);
+function selectLeague(e) {
+    console.log('hello')
+    let arr = [];
+    Fixtures.matches.forEach((match) => {
+        if (match.competition.name === e.target.value) {
+            arr.push({
+                homeTeam: match.homeTeam.name,
+                awayTeam: match.awayTeam.name,
+                homeCrest: match.homeTeam.crest,
+                awayCrest: match.awayTeam.crest,
+                id: match.id,
+                date: match.utcDate
+            })
+        }
+    })
+    dataFixture.value = arr;
+}
+
+
+//Getting all the fixtures from the json file
+
 
 //
 function getPrediction(e) {
     //checking if predition attribute is empth or filled using if statements
     //changing backgroud color of the team that is clicked
     //composedPath is used to get parent elemets of the clicked element
+    e.composedPath()[2].getAttribute("id");
     if (e.composedPath()[1].getAttribute("prediction") == "") {
         let team = e.target.id;
         e.composedPath()[1].setAttribute("prediction", team);
@@ -35,6 +62,10 @@ function getPrediction(e) {
             e.target.style.backgroundColor = "#30ea39";
             e.composedPath()[1].childNodes[0].style.backgroundColor = "#5c808e";
         }
+        else {
+            e.composedPath()[1].setAttribute("prediction", "");
+            e.target.style.backgroundColor = "#5c808e";
+        }
     }
     else if (e.composedPath()[1].getAttribute("prediction") == "AWAY_TEAM") {
         if (e.target.id == "HOME_TEAM") {
@@ -42,6 +73,10 @@ function getPrediction(e) {
             e.composedPath()[1].setAttribute("prediction", team);
             e.target.style.backgroundColor = "#30ea39";
             e.composedPath()[1].childNodes[1].style.backgroundColor = "#5c808e";
+        }
+        else {
+            e.composedPath()[1].setAttribute("prediction", "")
+            e.target.style.backgroundColor = "#5c808e";
         }
     }
 
@@ -57,6 +92,11 @@ function getPrediction(e) {
     //if all predictions are filled then changing the background color of the check mark
     if (count == 3) {
         e.composedPath()[2].childNodes[0].style.background = '#30ea39';
+        e.composedPath()[2].setAttribute('completed', true);
+    }
+    else {
+        e.composedPath()[2].childNodes[0].style.background = '#5e6652';
+        e.composedPath()[2].setAttribute('completed', false);
     }
 }
 
@@ -65,6 +105,16 @@ function getPrediction(e) {
 
 <template>
     <div class="grid-container">
+        <div class="custom-select" style="width:200px;">
+            <select id="currentLeague" @change="selectLeague">
+                <option value="Premier League">Premier League</option>
+                <option value="Primera Division">La Liga</option>
+                <option value="Bundesliga">Bundesliga</option>
+                <option value="Serie A">Serie A</option>
+                <option value="Ligue 1">Ligue 1</option>
+                <option value="Champions League">Champions League</option>
+            </select>
+        </div>
         <div class="heading">
             <p>CHECK</p>
             <p>HOME TEAM</p>
@@ -74,7 +124,7 @@ function getPrediction(e) {
             <p style="background-color: #302de0;">NEVILLE</p>
             <p style="background-color: #ffffff;">KAUTUK</p>
         </div>
-        <div class="pred-container" v-for="fixture in dataFixture" :id=fixture.id>
+        <div class="pred-container" v-for="fixture in dataFixture" :id=fixture.id completed=false>
             <div class="circle">
                 <div class="checkmark"></div>
             </div>
@@ -90,7 +140,7 @@ function getPrediction(e) {
                 <p>{{ moment(fixture.date).utc().format('DD-MM-YYYY') }}</p>
                 <p>{{ moment(fixture.date).format('dddd') }}</p>
             </div>
-            <div class="n" id="Azeem" prediction="">
+            <div class="n" id="Azeem" :prediction="useStore.pred[fixture.id].Azeem">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
             </div>
@@ -107,6 +157,19 @@ function getPrediction(e) {
 </template>
 
 <style>
+.custom-select {
+    margin: auto;
+}
+
+select {
+    border: none;
+    background-color: #5c808e;
+    height: 50px;
+    width: 200px;
+    font-size: 20px
+}
+
+
 .grid-container {
     display: grid;
     width: 100%;
@@ -132,12 +195,6 @@ function getPrediction(e) {
     text-align: center;
     height: 100%;
     width: 100%;
-}
-
-#az {
-    background-color: #e02d2d;
-    width: 100%;
-
 }
 
 .pred-container {
