@@ -4,19 +4,19 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { ref } from 'vue'
 import Preds from './components/Preds.vue'
-// import axios from 'axios'
+import axios from 'axios'
 // const config = {
 //   headers: {
 //     'X-Auth-Token': '49185e58260b4576ab876d47977111cc'
 //   }
 // }
-// axios.get('https://api.football-data.org/v4/competitions/DED/standings', config)
+// axios.get('https://api.football-data.org/v4/competitions/DED/standings',  config)
 //   .then((response) => {
 //     console.log(response.data)
 //   })
 //   .catch((error) => {
 //     console.log(error)
-//   })  
+//   })
 
 </script>
 

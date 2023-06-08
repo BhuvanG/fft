@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue'
+import { watch, ref } from 'vue'
 import Fixtures from '../assets/matches.json'
 import moment from 'moment'
 import { predStore } from './stores/predStore.js'
+
 
 let useStore = predStore()
 
@@ -20,10 +21,8 @@ Fixtures.matches.forEach((match) => {
     }
     useStore.setNew(match.id)
 })
-console.log(useStore.pred)
-console.log(dataFixture.value);
+
 function selectLeague(e) {
-    console.log('hello')
     let arr = [];
     Fixtures.matches.forEach((match) => {
         if (match.competition.name === e.target.value) {
@@ -38,68 +37,97 @@ function selectLeague(e) {
         }
     })
     dataFixture.value = arr;
+    setTimeout(() => {
+        setSelectionColor()
+    }, 10);
 }
 
 
 //Getting all the fixtures from the json file
 
 
-//
+
 function getPrediction(e) {
-    //checking if predition attribute is empth or filled using if statements
-    //changing backgroud color of the team that is clicked
-    //composedPath is used to get parent elemets of the clicked element
-    e.composedPath()[2].getAttribute("id");
-    if (e.composedPath()[1].getAttribute("prediction") == "") {
-        let team = e.target.id;
-        e.composedPath()[1].setAttribute("prediction", team);
-        e.target.style.backgroundColor = "#30ea39";
-    }
-    else if (e.composedPath()[1].getAttribute("prediction") == "HOME_TEAM") {
-        if (e.target.id == "AWAY_TEAM") {
-            let team = e.target.id;
-            e.composedPath()[1].setAttribute("prediction", team);
-            e.target.style.backgroundColor = "#30ea39";
-            e.composedPath()[1].childNodes[0].style.backgroundColor = "#5c808e";
-        }
-        else {
-            e.composedPath()[1].setAttribute("prediction", "");
-            e.target.style.backgroundColor = "#5c808e";
-        }
-    }
-    else if (e.composedPath()[1].getAttribute("prediction") == "AWAY_TEAM") {
-        if (e.target.id == "HOME_TEAM") {
-            let team = e.target.id;
-            e.composedPath()[1].setAttribute("prediction", team);
-            e.target.style.backgroundColor = "#30ea39";
-            e.composedPath()[1].childNodes[1].style.backgroundColor = "#5c808e";
-        }
-        else {
-            e.composedPath()[1].setAttribute("prediction", "")
-            e.target.style.backgroundColor = "#5c808e";
-        }
-    }
+    let matchid = e.target.parentElement.parentElement.id
 
-    //getting all the nodes with class n and checking if all the nodes have prediction attribute filled
-    let nodes = e.composedPath()[2].querySelectorAll('.n');
-    let count = 0;
-
-    nodes.forEach((node) => {
-        if (node.getAttribute('prediction') != "") {
-            count++;
-        }
-    })
-    //if all predictions are filled then changing the background color of the check mark
-    if (count == 3) {
-        e.composedPath()[2].childNodes[0].style.background = '#30ea39';
-        e.composedPath()[2].setAttribute('completed', true);
+    let user = e.target.parentElement.id
+    let pred = useStore.pred[matchid]
+    if (pred[user] === "") {
+        pred[user] = e.target.id
+    }
+    else if (pred[user] === e.target.id) {
+        pred[user] = ""
     }
     else {
-        e.composedPath()[2].childNodes[0].style.background = '#5e6652';
-        e.composedPath()[2].setAttribute('completed', false);
+        pred[user] = e.target.id
     }
+
+    setTimeout(() => {
+        let matchDiv = document.getElementById(matchid)
+        let c = matchDiv.getElementsByClassName('n')
+        if (c[0].getAttribute('prediction') != "" && c[1].getAttribute('prediction') != "" && c[2].getAttribute('prediction') != "") {
+            matchDiv.setAttribute('completed', true)
+        }
+        else {
+            matchDiv.setAttribute('completed', false)
+        }
+
+    }, 10);
+    setTimeout(() => {
+        setSelectionColor()
+    }, 10);
+
 }
 
+function setSelectionColor() {
+    dataFixture.value.forEach((curr) => {
+        let key = curr.id
+        let matchDiv = document.getElementById(key)
+        if (useStore.pred[key].Azeem === "HOME_TEAM") {
+            matchDiv.children[4].children[0].style.backgroundColor = "#60e538"
+            matchDiv.children[4].children[1].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Azeem === "AWAY_TEAM") {
+            matchDiv.children[4].children[1].style.backgroundColor = "#60e538"
+            matchDiv.children[4].children[0].style.backgroundColor = "#5c808e"
+        }
+        else {
+            matchDiv.children[4].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[4].children[1].style.backgroundColor = "#5c808e"
+        }
+        if (useStore.pred[key].Neville === "HOME_TEAM") {
+            matchDiv.children[5].children[0].style.backgroundColor = "#60e538"
+            matchDiv.children[5].children[1].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Neville === "AWAY_TEAM") {
+            matchDiv.children[5].children[1].style.backgroundColor = "#60e538"
+            matchDiv.children[5].children[0].style.backgroundColor = "#5c808e"
+        }
+        else {
+            matchDiv.children[5].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[5].children[1].style.backgroundColor = "#5c808e"
+        }
+        if (useStore.pred[key].Kautuk === "HOME_TEAM") {
+            matchDiv.children[6].children[0].style.backgroundColor = "#60e538"
+            matchDiv.children[6].children[1].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Kautuk === "AWAY_TEAM") {
+            matchDiv.children[6].children[1].style.backgroundColor = "#60e538"
+            matchDiv.children[6].children[0].style.backgroundColor = "#5c808e"
+        }
+        else {
+            matchDiv.children[6].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[6].children[1].style.backgroundColor = "#5c808e"
+        }
+        if (matchDiv.getAttribute('completed') === "true") {
+            matchDiv.children[0].style.backgroundColor = "#60e538"
+        }
+        else {
+            matchDiv.children[0].style.backgroundColor = "#5c808e"
+        }
+    })
+
+}
 
 </script>
 
@@ -124,7 +152,7 @@ function getPrediction(e) {
             <p style="background-color: #302de0;">NEVILLE</p>
             <p style="background-color: #ffffff;">KAUTUK</p>
         </div>
-        <div class="pred-container" v-for="fixture in dataFixture" :id=fixture.id completed=false>
+        <div class="pred-container" v-for="fixture in dataFixture" :id="fixture.id" completed=false>
             <div class="circle">
                 <div class="checkmark"></div>
             </div>
@@ -144,15 +172,16 @@ function getPrediction(e) {
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
             </div>
-            <div class="n" id="Neville" prediction="">
+            <div class="n" id="Neville" :prediction="useStore.pred[fixture.id].Neville">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
             </div>
-            <div class="n" id="Kautuk" prediction="">
+            <div class="n" id="Kautuk" :prediction="useStore.pred[fixture.id].Kautuk">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
             </div>
         </div>
+
     </div>
 </template>
 
@@ -163,7 +192,7 @@ function getPrediction(e) {
 
 select {
     border: none;
-    background-color: #5c808e;
+    background-color: #1667b3;
     height: 50px;
     width: 200px;
     font-size: 20px
