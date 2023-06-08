@@ -1,12 +1,12 @@
 <script setup>
-import { watch, ref } from 'vue'
+import { ref } from 'vue'
 import Fixtures from '../assets/matches.json'
 import moment from 'moment'
 import { predStore } from './stores/predStore.js'
 
-
 let useStore = predStore()
 
+//initializing to premeir league
 let dataFixture = ref([]);
 Fixtures.matches.forEach((match) => {
     if (match.competition.name === 'Premier League') {
@@ -20,10 +20,14 @@ Fixtures.matches.forEach((match) => {
         })
     }
     useStore.setNew(match.id)
+
 })
 
+
+//league selection
 function selectLeague(e) {
     let arr = [];
+    //getting all the fixtures of the selected league
     Fixtures.matches.forEach((match) => {
         if (match.competition.name === e.target.value) {
             arr.push({
@@ -36,20 +40,25 @@ function selectLeague(e) {
             })
         }
     })
+    //setting value to dataFixture
     dataFixture.value = arr;
+    //changing color of preds
+    //setTimeout is neccesary because the html component pred-container is not rendered yet
     setTimeout(() => {
         setSelectionColor()
     }, 10);
+
 }
 
 
 //Getting all the fixtures from the json file
 
 
-
+// function for getting the prediction and changing the prediction attribute  of the div
 function getPrediction(e) {
+    //getting the match id
     let matchid = e.target.parentElement.parentElement.id
-
+    //getting the user
     let user = e.target.parentElement.id
     let pred = useStore.pred[matchid]
     if (pred[user] === "") {
@@ -62,6 +71,8 @@ function getPrediction(e) {
         pred[user] = e.target.id
     }
 
+    //setting the prediction attribute of the pred-continer div
+    //setTimeout is neccesary because the html component pred-container attribute is not rendered yet
     setTimeout(() => {
         let matchDiv = document.getElementById(matchid)
         let c = matchDiv.getElementsByClassName('n')
@@ -73,12 +84,15 @@ function getPrediction(e) {
         }
 
     }, 10);
+    //changing color of preds
+    //setTimeout is neccesary because the html component pred-container is not rendered yet
     setTimeout(() => {
         setSelectionColor()
     }, 10);
 
 }
 
+//setting the color of the preds
 function setSelectionColor() {
     dataFixture.value.forEach((curr) => {
         let key = curr.id
@@ -86,39 +100,64 @@ function setSelectionColor() {
         if (useStore.pred[key].Azeem === "HOME_TEAM") {
             matchDiv.children[4].children[0].style.backgroundColor = "#60e538"
             matchDiv.children[4].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[4].children[2].style.backgroundColor = "#5c808e"
         }
         else if (useStore.pred[key].Azeem === "AWAY_TEAM") {
             matchDiv.children[4].children[1].style.backgroundColor = "#60e538"
             matchDiv.children[4].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[4].children[2].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Azeem === "DRAW") {
+            matchDiv.children[4].children[2].style.backgroundColor = "#60e538"
+            matchDiv.children[4].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[4].children[1].style.backgroundColor = "#5c808e"
         }
         else {
             matchDiv.children[4].children[0].style.backgroundColor = "#5c808e"
             matchDiv.children[4].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[4].children[2].style.backgroundColor = "#5c808e"
         }
         if (useStore.pred[key].Neville === "HOME_TEAM") {
             matchDiv.children[5].children[0].style.backgroundColor = "#60e538"
             matchDiv.children[5].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[5].children[2].style.backgroundColor = "#5c808e"
         }
         else if (useStore.pred[key].Neville === "AWAY_TEAM") {
             matchDiv.children[5].children[1].style.backgroundColor = "#60e538"
+            matchDiv.children[5].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[5].children[2].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Neville === "DRAW") {
+            matchDiv.children[5].children[2].style.backgroundColor = "#60e538"
+            matchDiv.children[5].children[1].style.backgroundColor = "#5c808e"
             matchDiv.children[5].children[0].style.backgroundColor = "#5c808e"
         }
         else {
             matchDiv.children[5].children[0].style.backgroundColor = "#5c808e"
             matchDiv.children[5].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[5].children[2].style.backgroundColor = "#5c808e"
         }
         if (useStore.pred[key].Kautuk === "HOME_TEAM") {
             matchDiv.children[6].children[0].style.backgroundColor = "#60e538"
             matchDiv.children[6].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[6].children[2].style.backgroundColor = "#5c808e"
         }
         else if (useStore.pred[key].Kautuk === "AWAY_TEAM") {
             matchDiv.children[6].children[1].style.backgroundColor = "#60e538"
             matchDiv.children[6].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[6].children[2].style.backgroundColor = "#5c808e"
+        }
+        else if (useStore.pred[key].Kautuk === "DRAW") {
+            matchDiv.children[6].children[2].style.backgroundColor = "#60e538"
+            matchDiv.children[6].children[0].style.backgroundColor = "#5c808e"
+            matchDiv.children[6].children[1].style.backgroundColor = "#5c808e"
         }
         else {
             matchDiv.children[6].children[0].style.backgroundColor = "#5c808e"
             matchDiv.children[6].children[1].style.backgroundColor = "#5c808e"
+            matchDiv.children[6].children[2].style.backgroundColor = "#5c808e"
         }
+        //setting color of checkmark circle
         if (matchDiv.getAttribute('completed') === "true") {
             matchDiv.children[0].style.backgroundColor = "#60e538"
         }
@@ -171,15 +210,25 @@ function setSelectionColor() {
             <div class="n" id="Azeem" :prediction="useStore.pred[fixture.id].Azeem">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+                <div id="DRAW" @click="getPrediction">
+                    D
+                </div>
             </div>
             <div class="n" id="Neville" :prediction="useStore.pred[fixture.id].Neville">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+                <div id="DRAW" @click="getPrediction">
+                    D
+                </div>
             </div>
             <div class="n" id="Kautuk" :prediction="useStore.pred[fixture.id].Kautuk">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+                <div id="DRAW" @click="getPrediction">
+                    D
+                </div>
             </div>
+
         </div>
 
     </div>
@@ -294,6 +343,17 @@ p {
 }
 
 .n>img {
+    width: 30px;
+    height: 30px;
+    background-color: #5c808e;
+    border: 2px solid black;
+    border-radius: 2px;
+    padding: 5px;
+}
+
+.n>div {
+    text-align: center;
+    font-size: 25px;
     width: 30px;
     height: 30px;
     background-color: #5c808e;

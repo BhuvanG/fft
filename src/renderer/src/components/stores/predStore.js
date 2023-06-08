@@ -11,10 +11,13 @@ export const predStore = defineStore({
             this.pred[mathchId][user] = selection
         },
         setNew(matchId){
+            
             this.pred[matchId] = {}
             this.pred[matchId]['Azeem'] = ""
             this.pred[matchId]['Neville'] = ""
             this.pred[matchId]['Kautuk'] = ""
+            
+            
         }
     }
   })
