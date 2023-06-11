@@ -1,27 +1,61 @@
 <script setup>
 import { ref } from 'vue'
-import Fixtures from '../assets/matches.json'
+// import Fixtures from '../assets/matches.json'
 import moment from 'moment'
 import { predStore } from './stores/predStore.js'
+import axios from 'axios'
+// import Calendar from 'primevue/calendar';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 
 let useStore = predStore()
-
+let date = ref()
 //initializing to premeir league
 let dataFixture = ref([]);
-Fixtures.matches.forEach((match) => {
-    if (match.competition.name === 'Premier League') {
-        dataFixture.value.push({
-            homeTeam: match.homeTeam.name,
-            awayTeam: match.awayTeam.name,
-            homeCrest: match.homeTeam.crest,
-            awayCrest: match.awayTeam.crest,
-            id: match.id,
-            date: match.utcDate
-        })
-    }
-    useStore.setNew(match.id)
+let Fixtures;
+let render = ref(false)
 
-})
+//getting the fixtures from the api when date is selected
+const handleDate = () => {
+    date.value = moment(date.value).format('YYYY-MM-DD')
+    let currentDate = '2023-05-25'
+    currentDate = moment(currentDate).format('YYYY-MM-DD')
+    const config = {
+        headers: {
+            'X-Auth-Token': '49185e58260b4576ab876d47977111cc'
+        }
+    }
+
+    axios.get(`https://api.football-data.org/v4/matches/?dateFrom=2023-05-08&dateTo=2023-05-14`, config)
+        .then((response) => {
+            Fixtures = response.data
+            Fixtures.matches.forEach((match) => {
+                if (match.competition.name === 'Premier League') {
+                    dataFixture.value.push({
+                        homeTeam: match.homeTeam.name,
+                        awayTeam: match.awayTeam.name,
+                        homeCrest: match.homeTeam.crest,
+                        awayCrest: match.awayTeam.crest,
+                        id: match.id,
+                        date: match.utcDate
+                    })
+                }
+                useStore.setNew(match.id)
+            })
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+
+    render.value = true
+}
+
+function reset() {
+    useStore.$reset()
+    render.value = false
+    dataFixture.value = []
+    console.log(useStore.pred)
+}
 
 
 //league selection
@@ -50,10 +84,6 @@ function selectLeague(e) {
 
 }
 
-
-//Getting all the fixtures from the json file
-
-
 // function for getting the prediction and changing the prediction attribute  of the div
 function getPrediction(e) {
     //getting the match id
@@ -75,12 +105,12 @@ function getPrediction(e) {
     //setTimeout is neccesary because the html component pred-container attribute is not rendered yet
     setTimeout(() => {
         let matchDiv = document.getElementById(matchid)
-        let c = matchDiv.getElementsByClassName('n')
+        let c = matchDiv.getElementsByClassName('pred-div')
         if (c[0].getAttribute('prediction') != "" && c[1].getAttribute('prediction') != "" && c[2].getAttribute('prediction') != "") {
-            matchDiv.setAttribute('completed', true)
+            useStore.pred[matchid].Completed = 'true'
         }
         else {
-            matchDiv.setAttribute('completed', false)
+            useStore.pred[matchid].Completed = 'false'
         }
 
     }, 10);
@@ -158,40 +188,113 @@ function setSelectionColor() {
             matchDiv.children[6].children[2].style.backgroundColor = "#5c808e"
         }
         //setting color of checkmark circle
-        if (matchDiv.getAttribute('completed') === "true") {
+        if (useStore.pred[key].Completed == 'true') {
             matchDiv.children[0].style.backgroundColor = "#60e538"
         }
         else {
             matchDiv.children[0].style.backgroundColor = "#5c808e"
         }
+
+
+        //setting color of captain
+        if (useStore.captain.Azeem == key) {
+            matchDiv.children[4].style.backgroundImage = "linear-gradient(red, yellow)"
+            matchDiv.children[4].children[3].style.color = "gold"
+        }
+        else {
+            matchDiv.children[4].style.backgroundImage = "none"
+            matchDiv.children[4].children[3].style.color = "white"
+        }
+        if (useStore.captain.Neville == key) {
+            matchDiv.children[5].style.backgroundImage = "linear-gradient(blue, yellow)"
+            matchDiv.children[5].children[3].style.color = "gold"
+        }
+        else {
+            matchDiv.children[5].style.backgroundImage = "none"
+            matchDiv.children[5].children[3].style.color = "white"
+        }
+        if (useStore.captain.Kautuk == key) {
+            matchDiv.children[6].style.backgroundImage = "linear-gradient(white, yellow)"
+            matchDiv.children[6].children[3].style.color = "gold"
+        }
+        else {
+            matchDiv.children[6].style.backgroundImage = "none"
+            matchDiv.children[6].children[3].style.color = "white"
+        }
     })
 
-}
 
+}
+function getCaptain(e) {
+    let matchid = e.target.parentElement.parentElement.id
+    //getting the user
+    let user = e.target.parentElement.id
+    if (useStore.captain[user] === matchid) {
+        useStore.captain[user] = ""
+    }
+    else {
+        useStore.captain[user] = matchid
+    }
+    setTimeout(() => {
+        setSelectionColor()
+    }, 10);
+
+}
+function submitPreds() {
+    // for (let p in useStore.pred) {
+    //     if (useStore.pred[p].completed === 'true') {
+    //         console.log(p)
+    //     }
+    // }
+    console.log(useStore.pred)
+    console.log(useStore.captain)
+}
 </script>
 
 <template>
     <div class="grid-container">
-        <div class="custom-select" style="width:200px;">
-            <select id="currentLeague" @change="selectLeague">
-                <option value="Premier League">Premier League</option>
-                <option value="Primera Division">La Liga</option>
-                <option value="Bundesliga">Bundesliga</option>
-                <option value="Serie A">Serie A</option>
-                <option value="Ligue 1">Ligue 1</option>
-                <option value="Champions League">Champions League</option>
-            </select>
+        <div class="filter">
+
+            <p style="margin: 0 10px 0 0; color: white">Filter by date:</p>
+            <!-- <input type="date" v-model="date" max="08-06-2023"> -->
+            <VueDatePicker v-model="date" style="width:200px" :enable-time-picker="false" :minDate="new Date()"
+                @update:model-value="handleDate" />
+            <div class="custom-select" style="width:200px;">
+                <select id="currentLeague" @change="selectLeague">
+                    <option value="Premier League">Premier League</option>
+                    <option value="Primera Division">La Liga</option>
+                    <option value="Bundesliga">Bundesliga</option>
+                    <option value="Serie A">Serie A</option>
+                    <option value="Ligue 1">Ligue 1</option>
+                    <option value="UEFA Champions League">Champions League</option>
+                </select>
+            </div>
+            <input type="button" value="Reset" @click="reset">
         </div>
         <div class="heading">
-            <p>CHECK</p>
-            <p>HOME TEAM</p>
-            <p>AWAY TEAM</p>
-            <p>DATE</p>
-            <p style="background-color: #e02d2d;">AZEEM</p>
-            <p style="background-color: #302de0;">NEVILLE</p>
-            <p style="background-color: #ffffff;">KAUTUK</p>
+            <div>
+                <p>CHECK</p>
+            </div>
+            <div>
+                <p>HOME TEAM</p>
+            </div>
+            <div>
+                <p>AWAY TEAM</p>
+            </div>
+            <div>
+                <p>DATE</p>
+            </div>
+            <div style="background-color: #e02d2d;">
+                <p>AZEEM</p>
+            </div>
+            <div style="background-color: #302de0;">
+                <p>NEVILLE</p>
+            </div>
+            <div style="background-color: #ffffff;border-radius: 0 5px 0 0;">
+                <p>KAUTUK</p>
+            </div>
         </div>
-        <div class="pred-container" v-for="fixture in dataFixture" :id="fixture.id" completed=false>
+        <div class="pred-container" v-if="render" v-for="fixture in dataFixture" :id="fixture.id">
             <div class="circle">
                 <div class="checkmark"></div>
             </div>
@@ -207,51 +310,82 @@ function setSelectionColor() {
                 <p>{{ moment(fixture.date).utc().format('DD-MM-YYYY') }}</p>
                 <p>{{ moment(fixture.date).format('dddd') }}</p>
             </div>
-            <div class="n" id="Azeem" :prediction="useStore.pred[fixture.id].Azeem">
+            <div class="pred-div" id="Azeem" :prediction="useStore.pred[fixture.id].Azeem">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div id="DRAW" @click="getPrediction">
+                <div class="draw-div" id="DRAW" @click="getPrediction">
                     D
                 </div>
-            </div>
-            <div class="n" id="Neville" :prediction="useStore.pred[fixture.id].Neville">
-                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div id="DRAW" @click="getPrediction">
-                    D
+                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                    C
                 </div>
             </div>
-            <div class="n" id="Kautuk" :prediction="useStore.pred[fixture.id].Kautuk">
+            <div class="pred-div" id="Neville" :prediction="useStore.pred[fixture.id].Neville">
                 <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
                 <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div id="DRAW" @click="getPrediction">
+                <div class="draw-div" id="DRAW" @click="getPrediction">
                     D
+                </div>
+                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                    C
+                </div>
+            </div>
+            <div class="pred-div" id="Kautuk" :prediction="useStore.pred[fixture.id].Kautuk">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
+                <div class="draw-div" id="DRAW" @click="getPrediction">
+                    D
+                </div>
+                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                    C
                 </div>
             </div>
 
+        </div>
+        <div class="submit">
+            <input type="button" v-if="render" value="Submit" @click="submitPreds">
         </div>
 
     </div>
 </template>
 
 <style>
-.custom-select {
-    margin: auto;
-}
-
 select {
-    border: none;
+    outline: 2px solid #010f1c;
+    border-radius: 3px;
     background-color: #1667b3;
     height: 50px;
     width: 200px;
+    font-family: 'Roboto', sans-serif;
     font-size: 20px
 }
 
+.filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    gap: 30px;
+    margin: 10px 0 10px 0;
+    font-size: 20px;
+}
+
+.filter>input {
+    border: none;
+    text-align: center;
+    background-color: #6bdde1;
+    height: 50px;
+    width: 200px;
+    font-size: 20px;
+    font-family: 'Roboto', sans-serif;
+    border-radius: 2px;
+}
 
 .grid-container {
     display: grid;
     width: 100%;
     margin: 0 auto;
+
 }
 
 .heading {
@@ -268,11 +402,18 @@ select {
 
 
 
-.heading>p {
-    padding-top: 5px;
+.heading>div {
+    display: grid;
+    padding-top: 1px;
     text-align: center;
-    height: 100%;
+    height: 30px;
     width: 100%;
+    margin: auto;
+}
+
+.heading>div>p {
+    margin: auto;
+
 }
 
 .pred-container {
@@ -333,40 +474,70 @@ p {
     border-right: 2px solid white;
 }
 
-.n {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.pred-div {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    width: 100%;
     margin: auto;
-    gap: 10px;
-
+    gap: 4px;
 }
 
-.n>img {
+
+
+.pred-div>img {
     width: 30px;
     height: 30px;
     background-color: #5c808e;
     border: 2px solid black;
     border-radius: 2px;
+    margin: auto;
     padding: 5px;
 }
 
-.n>div {
+.pred-div>img:hover {
+    cursor: pointer;
+}
+
+.draw-captain {
+    display: grid;
+    place-self: center;
+    grid-column: 2/2;
     text-align: center;
-    font-size: 25px;
+    font-size: 10px;
+    width: 8px;
+    height: 8px;
+    background-color: #020202;
+    border: 2px solid black;
+    border-radius: 2px;
+    padding: 2px;
+    margin: auto;
+}
+
+.draw-captain:hover {
+    cursor: pointer;
+}
+
+
+.draw-div {
+    text-align: center;
+    font-size: 27px;
     width: 30px;
     height: 30px;
     background-color: #5c808e;
     border: 2px solid black;
     border-radius: 2px;
     padding: 5px;
+    margin: auto;
+}
+
+.draw-div:hover {
+    cursor: pointer;
 }
 
 #Azeem {
     background-color: #e02d2d;
     width: 100%;
     height: 100%;
-
 }
 
 #Neville {
@@ -379,6 +550,7 @@ p {
     background-color: #ffffff;
     width: 100%;
     height: 100%;
+
 }
 </style>
 ```

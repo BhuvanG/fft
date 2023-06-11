@@ -2,26 +2,13 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// const sqlite3 = require('sqlite3').verbose();
-// const db = new sqlite3.Database('./dabase.sqlite.db');
+const { session } = require('electron');
+ 
 
-// db.serialize(() => {
-
-//   db.run("CREATE TABLE lorem (info TEXT)");
-
-//   var stmt = db.prepare("INSERT INTO lorem VALUES (?)");
-//   for (var i = 0; i < 10; i++) {
-//       stmt.run("Ipsum " + i);
-//   }
-//   stmt.finalize();
-
-//     db.each("SELECT rowid AS id, info FROM lorem", (err, row) => {
-//         console.log(row.id + ": " + row.info);
-//     });
-// });
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    
     width: 1600,
     height: 900,
     show: false,
@@ -29,7 +16,8 @@ function createWindow() {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: false,
     }
   })
 
@@ -51,6 +39,7 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+app.commandLine.appendSwitch('disable-site-isolation-trials')
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -83,6 +72,10 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+
+
+
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.

@@ -3,7 +3,9 @@ import { defineStore } from "pinia";
 export const predStore = defineStore({
     id: 'pred',
     state: () => ({
-        pred: {}
+        pred: {},
+        captain: {Azeem: "", Neville: "", Kautuk: ""}
+       
     }),
     actions: {
         setPred(mathchId, user , selection) {
@@ -16,8 +18,7 @@ export const predStore = defineStore({
             this.pred[matchId]['Azeem'] = ""
             this.pred[matchId]['Neville'] = ""
             this.pred[matchId]['Kautuk'] = ""
-            
-            
+            this.pred[matchId]['Completed'] = 'false'
         }
     }
   })

@@ -1,5 +1,7 @@
 <script setup>
-
+import { predStore } from './stores/predStore.js'
+let useStore = predStore()
+console.log(useStore.pred)
 </script>
 
 <template>

@@ -19,6 +19,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.3",
     "@electron-toolkit/utils": "^1.0.2",
+    "@vuepic/vue-datepicker": "^5.2.0",
     "axios": "^1.4.0",
     "better-sqlite3": "^8.4.0",
     "electron-store": "^8.1.0",
