@@ -1,12 +1,14 @@
 <script setup>
 import { ref } from 'vue'
-// import Fixtures from '../assets/matches.json'
 import moment from 'moment'
 import { predStore } from './stores/predStore.js'
 import axios from 'axios'
-// import Calendar from 'primevue/calendar';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import Swal from 'sweetalert2'
+// import db from './database/db.js'
+import { db } from './database/db';
+const { AsyncDatabase } = require("promised-sqlite3");
 
 let useStore = predStore()
 let date = ref()
@@ -16,7 +18,8 @@ let Fixtures;
 let render = ref(false)
 
 //getting the fixtures from the api when date is selected
-const handleDate = () => {
+async function handleDate() {
+    await reset()
     date.value = moment(date.value).format('YYYY-MM-DD')
     let currentDate = '2023-05-25'
     currentDate = moment(currentDate).format('YYYY-MM-DD')
@@ -40,26 +43,40 @@ const handleDate = () => {
                         date: match.utcDate
                     })
                 }
-                useStore.setNew(match.id)
+                useStore.setNew(match.id, match.homeTeam.name, match.awayTeam.name, match.homeTeam.crest, match.awayTeam.crest, match.utcDate)
             })
+            render.value = true
         })
         .catch((error) => {
             console.log(error)
         })
 
-    render.value = true
+
 }
 
-function reset() {
+async function reset() {
     useStore.$reset()
     render.value = false
     dataFixture.value = []
-    console.log(useStore.pred)
+
+    // Swal.fire({
+    //     title: 'Do you want to save the changes?',
+    //     showCancelButton: true,
+    //     confirmButtonText: 'Save',
+    //     denyButtonText: `Cancel`,
+    // }).then((result) => {
+    //     /* Read more about isConfirmed, isDenied below */
+    //     if (result.isConfirmed) {
+    //         Swal.fire('Saved!', '', 'success')
+    //     } else if (result.isDenied) {
+    //         Swal.fire('Changes are not saved', '', 'info')
+    //     }
+    // })
 }
 
 
 //league selection
-function selectLeague(e) {
+async function selectLeague(e) {
     let arr = [];
     //getting all the fixtures of the selected league
     Fixtures.matches.forEach((match) => {
@@ -78,14 +95,14 @@ function selectLeague(e) {
     dataFixture.value = arr;
     //changing color of preds
     //setTimeout is neccesary because the html component pred-container is not rendered yet
-    setTimeout(() => {
-        setSelectionColor()
-    }, 10);
 
 }
 
+
+
+
 // function for getting the prediction and changing the prediction attribute  of the div
-function getPrediction(e) {
+async function getPrediction(e) {
     //getting the match id
     let matchid = e.target.parentElement.parentElement.id
     //getting the user
@@ -103,27 +120,25 @@ function getPrediction(e) {
 
     //setting the prediction attribute of the pred-continer div
     //setTimeout is neccesary because the html component pred-container attribute is not rendered yet
-    setTimeout(() => {
-        let matchDiv = document.getElementById(matchid)
-        let c = matchDiv.getElementsByClassName('pred-div')
-        if (c[0].getAttribute('prediction') != "" && c[1].getAttribute('prediction') != "" && c[2].getAttribute('prediction') != "") {
-            useStore.pred[matchid].Completed = 'true'
-        }
-        else {
-            useStore.pred[matchid].Completed = 'false'
-        }
 
-    }, 10);
-    //changing color of preds
-    //setTimeout is neccesary because the html component pred-container is not rendered yet
-    setTimeout(() => {
-        setSelectionColor()
-    }, 10);
 
 }
 
+async function checkCompleted(e) {
+    let matchid = e.target.parentElement.parentElement.id
+    let matchDiv = document.getElementById(matchid)
+    let c = matchDiv.getElementsByClassName('pred-div')
+    if (c[0].getAttribute('prediction') != "" && c[1].getAttribute('prediction') != "" && c[2].getAttribute('prediction') != "") {
+        useStore.pred[matchid].Completed = 'true'
+    }
+    else {
+        useStore.pred[matchid].Completed = 'false'
+    }
+}
+
+
 //setting the color of the preds
-function setSelectionColor() {
+async function setSelectionColor() {
     dataFixture.value.forEach((curr) => {
         let key = curr.id
         let matchDiv = document.getElementById(key)
@@ -225,7 +240,7 @@ function setSelectionColor() {
 
 
 }
-function getCaptain(e) {
+async function getCaptain(e) {
     let matchid = e.target.parentElement.parentElement.id
     //getting the user
     let user = e.target.parentElement.id
@@ -235,19 +250,53 @@ function getCaptain(e) {
     else {
         useStore.captain[user] = matchid
     }
-    setTimeout(() => {
-        setSelectionColor()
-    }, 10);
+}
 
+async function dbUpdatePreds() {
+    try {
+        const db = await AsyncDatabase.open("./database.sqlite.db");
+        db.inner.on("trace", (sql) => console.log("[TRACE]", sql));
+
+        const temp = await db.run("insert into predContainer (dateStart,dateEnd) values ('2023-05-08','2023-05-14')")
+        console.log(temp.lastID)
+        
+        
+    }
+    catch (err) {
+        console.error(err);
+    }
 }
 function submitPreds() {
-    // for (let p in useStore.pred) {
-    //     if (useStore.pred[p].completed === 'true') {
-    //         console.log(p)
-    //     }
-    // }
-    console.log(useStore.pred)
-    console.log(useStore.captain)
+    Swal.fire({
+        title: 'Do you want to save the changes?',
+        showCancelButton: true,
+        confirmButtonText: 'Save',
+        denyButtonText: `Cancel`,
+    }).then(async (result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            await dbUpdatePreds()
+            Swal.fire('Saved!', '', 'success')
+        } else if (result.isDenied) {
+            Swal.fire('Changes are not saved', '', 'info')
+        }
+    })
+}
+
+async function setLeague(e) {
+    await selectLeague(e)
+    await setSelectionColor()
+}
+
+async function setCaptain(e) {
+    await getCaptain(e)
+    await setSelectionColor()
+}
+
+async function setPrediction(e) {
+    await getPrediction(e)
+    await checkCompleted(e)
+    await setSelectionColor()
 }
 </script>
 
@@ -260,7 +309,7 @@ function submitPreds() {
             <VueDatePicker v-model="date" style="width:200px" :enable-time-picker="false" :minDate="new Date()"
                 @update:model-value="handleDate" />
             <div class="custom-select" style="width:200px;">
-                <select id="currentLeague" @change="selectLeague">
+                <select id="currentLeague" @change="setLeague">
                     <option value="Premier League">Premier League</option>
                     <option value="Primera Division">La Liga</option>
                     <option value="Bundesliga">Bundesliga</option>
@@ -270,6 +319,9 @@ function submitPreds() {
                 </select>
             </div>
             <input type="button" value="Reset" @click="reset">
+
+            <input type="button" value="Submit" @click="submitPreds">
+
         </div>
         <div class="heading">
             <div>
@@ -311,40 +363,38 @@ function submitPreds() {
                 <p>{{ moment(fixture.date).format('dddd') }}</p>
             </div>
             <div class="pred-div" id="Azeem" :prediction="useStore.pred[fixture.id].Azeem">
-                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div class="draw-div" id="DRAW" @click="getPrediction">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="setPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="setPrediction">
+                <div class="draw-div" id="DRAW" @click="setPrediction">
                     D
                 </div>
-                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                <div class="draw-captain" id="CAPTAIN" @click="setCaptain">
                     C
                 </div>
             </div>
             <div class="pred-div" id="Neville" :prediction="useStore.pred[fixture.id].Neville">
-                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div class="draw-div" id="DRAW" @click="getPrediction">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="setPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="setPrediction">
+                <div class="draw-div" id="DRAW" @click="setPrediction">
                     D
                 </div>
-                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                <div class="draw-captain" id="CAPTAIN" @click="setCaptain">
                     C
                 </div>
             </div>
             <div class="pred-div" id="Kautuk" :prediction="useStore.pred[fixture.id].Kautuk">
-                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="getPrediction">
-                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="getPrediction">
-                <div class="draw-div" id="DRAW" @click="getPrediction">
+                <img :src="fixture.homeCrest" id="HOME_TEAM" @click="setPrediction">
+                <img :src="fixture.awayCrest" id="AWAY_TEAM" @click="setPrediction">
+                <div class="draw-div" id="DRAW" @click="setPrediction">
                     D
                 </div>
-                <div class="draw-captain" id="CAPTAIN" @click="getCaptain">
+                <div class="draw-captain" id="CAPTAIN" @click="setCaptain">
                     C
                 </div>
             </div>
 
         </div>
-        <div class="submit">
-            <input type="button" v-if="render" value="Submit" @click="submitPreds">
-        </div>
+
 
     </div>
 </template>
