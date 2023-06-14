@@ -7,8 +7,8 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import Swal from 'sweetalert2'
 // import db from './database/db.js'
-import { db } from './database/db';
-const { AsyncDatabase } = require("promised-sqlite3");
+import db from './database/db';
+
 
 let useStore = predStore()
 let date = ref()
@@ -58,20 +58,6 @@ async function reset() {
     useStore.$reset()
     render.value = false
     dataFixture.value = []
-
-    // Swal.fire({
-    //     title: 'Do you want to save the changes?',
-    //     showCancelButton: true,
-    //     confirmButtonText: 'Save',
-    //     denyButtonText: `Cancel`,
-    // }).then((result) => {
-    //     /* Read more about isConfirmed, isDenied below */
-    //     if (result.isConfirmed) {
-    //         Swal.fire('Saved!', '', 'success')
-    //     } else if (result.isDenied) {
-    //         Swal.fire('Changes are not saved', '', 'info')
-    //     }
-    // })
 }
 
 
@@ -93,9 +79,6 @@ async function selectLeague(e) {
     })
     //setting value to dataFixture
     dataFixture.value = arr;
-    //changing color of preds
-    //setTimeout is neccesary because the html component pred-container is not rendered yet
-
 }
 
 
@@ -132,6 +115,15 @@ async function checkCompleted(e) {
         useStore.pred[matchid].Completed = 'true'
     }
     else {
+        if (useStore.captain.Azeem == matchid) {
+            useStore.captain.Azeem = ""
+        }
+        if (useStore.captain.Neville == matchid) {
+            useStore.captain.Neville = ""
+        }
+        if (useStore.captain.Kautuk == matchid) {
+            useStore.captain.Kautuk = ""
+        }
         useStore.pred[matchid].Completed = 'false'
     }
 }
@@ -244,23 +236,29 @@ async function getCaptain(e) {
     let matchid = e.target.parentElement.parentElement.id
     //getting the user
     let user = e.target.parentElement.id
-    if (useStore.captain[user] === matchid) {
-        useStore.captain[user] = ""
-    }
-    else {
-        useStore.captain[user] = matchid
+    if (useStore.pred[matchid].Completed == 'true') {
+        if (useStore.captain[user] === matchid) {
+            useStore.captain[user] = ""
+        }
+        else {
+            useStore.captain[user] = matchid
+        }
     }
 }
 
 async function dbUpdatePreds() {
     try {
-        const db = await AsyncDatabase.open("./database.sqlite.db");
-        db.inner.on("trace", (sql) => console.log("[TRACE]", sql));
 
+        //insterting pred container
         const temp = await db.run("insert into predContainer (dateStart,dateEnd) values ('2023-05-08','2023-05-14')")
-        console.log(temp.lastID)
-        
-        
+        const predContainerId = temp.lastID //getting the id of the inserted row
+
+        // inserting the fixtures
+        for (let match in useStore.pred) {
+            if (useStore.pred[match].Completed == 'true') {
+                await db.run(`insert into prediction values (${match},${predContainerId},'${useStore.pred[match].HomeTeam}','${useStore.pred[match].HomeCrest}','${useStore.pred[match].AwayTeam}','${useStore.pred[match].AwayCrest}','${useStore.pred[match].Date}', 'not completed', '', '${useStore.pred[match].Azeem}','${useStore.pred[match].Neville}','${useStore.pred[match].Kautuk}')`)
+            }
+        }
     }
     catch (err) {
         console.error(err);
